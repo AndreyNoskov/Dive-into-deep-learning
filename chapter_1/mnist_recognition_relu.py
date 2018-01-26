@@ -11,7 +11,7 @@ relu_neurons = 100
 
 # заглушки
 x = tf.placeholder(tf.float32, [None, image_size])
-y_ = tf.placeholder(tf.float32, [None, 10])
+y = tf.placeholder(tf.float32, [None, 10])
 keep_probability = tf.placeholder(tf.float32)
 
 # оптимизируемые переменные
@@ -27,10 +27,10 @@ h = tf.nn.relu(tf.matmul(x, w_relu) + b_relu)
 # слой dropout
 h_drop = tf.nn.dropout(h, keep_probability)
 # слой logit и выходной слой с SoftMax-нормализацией
-y = tf.nn.softmax(tf.matmul(h_drop, w) + b)
+y_pred = tf.nn.softmax(tf.matmul(h_drop, w) + b)
 
 # кросс-энтропия как функция потерь
-cross_entropy = tf.reduce_mean(-tf.reduce_sum(y_ * tf.log(y), reduction_indices=[1]))
+cross_entropy = tf.reduce_mean(-tf.reduce_sum(y * tf.log(y_pred), reduction_indices=[1]))
 
 # градиентный спуск как метода оптимизации
 train_step = tf.train.GradientDescentOptimizer(0.3).minimize(cross_entropy)
@@ -43,15 +43,15 @@ session.run(init)
 # запускаем обучение
 for i in range(1000):
     x_batch, y_batch = mnist.train.next_batch(100)
-    session.run(train_step, feed_dict={x: x_batch, y_: y_batch, keep_probability: 0.5})
+    session.run(train_step, feed_dict={x: x_batch, y: y_batch, keep_probability: 0.5})
 
 # считаем точность
-correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
+correct_prediction = tf.equal(tf.argmax(y_pred, 1), tf.argmax(y, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
 # выводим точность
 print("Точность: %s" % session.run(accuracy, feed_dict={x: mnist.test.images,
-                                                        y_: mnist.test.labels,
+                                                        y: mnist.test.labels,
                                                         keep_probability: 0.5}))
 
 # закрываем сессию
